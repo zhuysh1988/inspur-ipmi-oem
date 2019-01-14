@@ -63,7 +63,8 @@ int read_sys_eeprom(void *eeprom_data, int offset, int len)
     int i = 0;
     u_int8_t *c;
     int addr = SYS_EEPROM_OFFSET + offset;
-    std::string tmp = SYS_EEPROM_I2C_DEVICE;
+    // char *SYS_EEPROM_I2C_DEVICE = "/dev/i2c-1";
+    std::string tmp = "/dev/i2c-1";
     char* i2c_device = tmp.data();
     c = static_cast<u_int8_t *>(eeprom_data);
     if (eeprom_open(i2c_device, SYS_EEPROM_I2C_ADDR,
@@ -90,7 +91,7 @@ int write_sys_eeprom(void *eeprom_data, int len)
     u_int8_t *c;
     u_int16_t  addr = SYS_EEPROM_OFFSET;
     
-    std::string tmp = SYS_EEPROM_I2C_DEVICE;
+    std::string tmp = "/dev/i2c-1";
     char* i2c_device = tmp.data();
 
     c = static_cast<u_int8_t *>(eeprom_data);

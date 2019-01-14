@@ -12,7 +12,7 @@
 #define SYS_EEPROM_I2C_ADDR          0x50
 #define SYS_EEPROM_I2C_MEM_ADDR_BITS 16
 
-std::string SYS_EEPROM_I2C_DEVICE = "/dev/i2c-1";
+// char *SYS_EEPROM_I2C_DEVICE = "/dev/i2c-1";
 // constexpr auto SYS_EEPROM_OFFSET = 0;
 // constexpr auto SYS_EEPROM_SIZE = 256;
 // constexpr auto SYS_EEPROM_I2C_MEM_ADDR_BITS = 8;
