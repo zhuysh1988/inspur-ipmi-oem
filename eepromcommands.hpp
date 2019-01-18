@@ -4,8 +4,6 @@
 
 namespace inspur
 {
-namespace ipmi
-{
 
 
 /* Maximum length of a TLV value in bytes */
@@ -82,5 +80,4 @@ struct GetEEPROMInfoRes
     uint8_t eepContent[maxArrayLength];
 };
 # pragma pack(pop)
-} // namespace ipmi
 } // namespace inspur

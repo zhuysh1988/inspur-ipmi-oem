@@ -9,8 +9,6 @@ using std::uint8_t;
 
 namespace inspur
 {
-namespace i2c
-{
 
 /*
  * Request
@@ -40,8 +38,6 @@ struct SetEEPROMInfoReq
 # pragma pack(pop)
 
 void setupGlobalInpsurI2c();
-
-} // namespace i2c
 
 /**
  * I2c is a global i2c-via-ipmi manager and IPMI handler.

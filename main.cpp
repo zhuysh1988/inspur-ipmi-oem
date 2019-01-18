@@ -34,8 +34,8 @@ void setupInspurOemSysCommands() __attribute__((constructor));
 
 void setupInspurOemSysCommands()
 {
-    ipmi::registerPSUFunctions();
-    i2c::setupGlobalInpsurI2c();
+    registerPSUFunctions();
+    setupGlobalInpsurI2c();
 }
 
 } // namespace google

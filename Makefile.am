@@ -1,13 +1,8 @@
 AM_DEFAULT_SOURCE_EXT = .cpp
 
-if HAVE_SYSTEMD
-systemdsystemunit_DATA = \
-  gbmc-psudddd-hardreset.target
-endif
-
 libinspurcmdsdir = ${libdir}/ipmid-providers
 libinspurcmds_LTLIBRARIES = libinspurcmds.la
-libinspurcmds_la_SOURCES = main.cpp psucommands.cpp i2c.cpp 24cXX.c
+libinspurcmds_la_SOURCES = main.cpp psucommands.cpp i2c.cpp 24cXX.c sfpcommands.cpp utils.cpp
 
 libinspurcmds_la_LDFLAGS = \
 	$(SDBUSPLUS_LIBS) \

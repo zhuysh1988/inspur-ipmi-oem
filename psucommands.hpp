@@ -3,11 +3,9 @@
 
 namespace inspur
 {
-namespace ipmi
-{
 
 // PSU GPIO configure
-static constexpr const int psuConf[2] = {305, 306};
+static constexpr const int psuConf[2] = {320, 321};
 
 static constexpr const uint8_t psuSubCmd = 0x00;
 static constexpr const uint8_t PSU_MFR_LEN			(16);
@@ -74,6 +72,4 @@ struct GetPSUStatusRes
     InspurPSUInfo_T PSUInfo; 
 };
 # pragma pack(pop)
-
-}
 }

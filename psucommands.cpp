@@ -10,8 +10,6 @@
 
 namespace inspur
 {
-namespace ipmi
-{
 
 int getPSUNum()
 {
@@ -41,6 +39,77 @@ int getGPIOValue(const int gpio)
     close(fd);
     return (atoi(value_str));
 }
+
+int initGpio(int gpio)
+{
+    char buffer[64];
+    int len;
+    int fp;
+    fp = open("/sys/class/gpio/export", O_WRONLY);
+    if (fp == -1)
+    {
+        std::fprintf(stderr, "Failed to open gpio export!");
+        close(fp);
+        return -1;
+    }
+    len = snprintf(buffer, sizeof(buffer), "%d", gpio);    
+    if (write(fp, buffer, len) < 0)
+    {
+        std::fprintf(stderr, "Failed to export gpio!");
+    }
+    close(fp);
+    return 0;
+}
+
+int gpioUnexport(int gpio)
+{
+    char buffer[64];
+    int len;
+    int fp;
+    fp = open("/sys/class/gpio/unexport", O_WRONLY);
+    if (fp == -1)
+    {
+        std::fprintf(stderr, "Failed to open gpio export!");
+        close(fp);
+        return -1;
+    }
+    len = snprintf(buffer, sizeof(buffer), "%d", gpio);    
+    if (write(fp, buffer, len) < 0)
+    {
+        std::fprintf(stderr, "Failed to unexport gpio!");
+        close(fp);
+        return -1;
+    }
+    close(fp);
+    return 0;
+}
+
+int setDirection(int gpio, int dir)
+{
+    // 0-->IN, 1-->OUT
+    static const char dir_str[] = "in\0out";
+    char path[64];
+    int fp;
+
+    snprintf(path, sizeof(path), "/sys/class/gpio/gpio%d/direction", gpio);
+    fp = open(path, O_WRONLY);
+    if (fp < 0)
+    {
+        std::fprintf(stderr, "Failed to open gpio direction!");
+        close(fp);
+        return -1;
+    }
+
+    if (write(fp, &dir_str[dir == 0 ? 0 : 3], dir == 0 ? 2 : 3) < 0)
+    {
+        std::fprintf(stderr, "Failed to set gpio direction!");
+        return -1;
+    }
+
+    close(fp);
+    return 0;
+}
+
 
 ipmi_ret_t ipmiGetPSUCount(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
                                         ipmi_request_t request,
@@ -94,8 +163,26 @@ ipmi_ret_t ipmiGetPSUStatus(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
         return IPMI_CC_PARM_OUT_OF_RANGE;
     }
 
+    int initFlag = initGpio(psuConf[psuIndex]);
+    if (initFlag == -1)
+    {
+        return IPMI_CC_PARM_OUT_OF_RANGE;
+    }
+
+    int dirFlag = setDirection(psuConf[psuIndex], 0);
+    if (dirFlag == -1)
+    {
+        return IPMI_CC_PARM_OUT_OF_RANGE;
+    }
+
     int psuPresent = getGPIOValue(psuConf[psuIndex]);
     if (psuPresent == -1)
+    {
+        return IPMI_CC_INVALID_FIELD_REQUEST;
+    }
+
+    int unexport = gpioUnexport(psuConf[psuIndex]);
+    if (unexport == -1)
     {
         return IPMI_CC_INVALID_FIELD_REQUEST;
     }
@@ -103,7 +190,7 @@ ipmi_ret_t ipmiGetPSUStatus(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
     *dataLen = sizeof(GetPSUStatusRes);
     psuInfoRes.completeCode = completeCode;
     psuInfoRes.PSUInfo.Index = psuIndex;
-    psuInfoRes.PSUInfo.Present = psuPresent;
+    psuInfoRes.PSUInfo.Present = psuPresent == 1 ? 0 : 1;
 
     std::memcpy(response, &psuInfoRes, *dataLen);
 
@@ -126,5 +213,4 @@ void registerPSUFunctions()
     
     return;
 }
-} // namespace psu
 } // namespace ipmi

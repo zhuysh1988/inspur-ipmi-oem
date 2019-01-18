@@ -33,8 +33,6 @@
 
 namespace inspur
 {
-namespace i2c
-{
 
 // Instance object.
 std::unique_ptr<I2c> inspurOemI2c;
@@ -149,7 +147,7 @@ ipmi_ret_t ipmiReadEEPROM(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
         return IPMI_CC_INVALID_FIELD_REQUEST;
     }
 
-    getEEPROMRes.completeCode = inspur::ipmi::completeCode;
+    getEEPROMRes.completeCode = completeCode;
     *dataLen = sizeof(getEEPROMRes);
 
     std::memcpy(response, &getEEPROMRes, *dataLen);
@@ -168,7 +166,7 @@ ipmi_ret_t ipmiWriteEEPROM(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
         return IPMI_CC_REQ_DATA_LEN_INVALID;
     }
 
-    inspur::ipmi::InpurCompleteCodeRes inspurCompleteCodeRes{};
+    InpurCompleteCodeRes inspurCompleteCodeRes{};
 
     int rt = write_sys_eeprom(request, *dataLen);
 
@@ -185,7 +183,6 @@ ipmi_ret_t ipmiWriteEEPROM(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
 }
 
 
-} // namespace i2c
 
 // /**
 //  * read:  ipmitool raw 0x2e 2 read(0) offset len 
@@ -227,22 +224,20 @@ ipmi_ret_t ipmiWriteEEPROM(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
 // }
 
 
-namespace i2c
-{
+
 // Currently ipmid dynamically loads providers such as these;
 // this creates our singleton upon load.
 
 void setupGlobalInpsurI2c()
 {
     ipmi_register_callback(
-        ipmi::netfunInspurAppOEM,
-        ipmi::cmdGetEEPROMAllInfo,
+        netfunInspurAppOEM,
+        cmdGetEEPROMAllInfo,
         NULL, ipmiReadEEPROM, PRIVILEGE_USER);
     
     ipmi_register_callback(
-        ipmi::netfunInspurAppOEM,
-        ipmi::cmdsetEEPROMInfo,
+        netfunInspurAppOEM,
+        cmdsetEEPROMInfo,
         NULL, ipmiReadEEPROM, PRIVILEGE_USER);
 }
-} // namespace i2c
 } // namespace oem

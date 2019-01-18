@@ -3,9 +3,6 @@
 
 namespace inspur
 {
-namespace ipmi
-{
-
 
 enum IPMINetfnInspurOEMCmd
 {
@@ -51,6 +48,10 @@ static constexpr ipmi_netfn_t netfunInspurAppOEM = 0x3C;
 static constexpr const uint8_t maxArrayLength = 0xFF;
 static constexpr const uint8_t completeCode = 0x00;
 
+// constexpr auto PROP_INTF = "org.freedesktop.DBus.Properties";
+
+// constexpr auto METHOD_GET = "Get";
+
 
 #pragma pack(push, 1)
 struct InpurCompleteCodeRes
@@ -60,4 +61,3 @@ struct InpurCompleteCodeRes
 #pragma pack(pop)
 
 } // namespace ipmi
-} // namespace google

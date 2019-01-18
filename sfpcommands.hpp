@@ -1,23 +1,27 @@
 #pragma once
 #include <cstdint>
 #include <main.hpp>
+#include <types.hpp>
 
 namespace inspur
-{
-namespace ipmi
 {
 
 #pragma pack(push, 1)
 struct SFPInfoReq
 {
     uint8_t sfpIndex;
-    uint8_t sfpStatus;
 };
 
 struct SFPStatusRes
 {
     uint8_t completeCode;
     uint8_t status;
+};
+
+struct SFPSumRes
+{
+    uint8_t completeCode;
+    uint8_t sum;
 };
 
 struct SFPEEPromRes
@@ -27,5 +31,4 @@ struct SFPEEPromRes
 };
 # pragma pack(pop)
 
-}
 }
