@@ -12,6 +12,12 @@ struct SFPInfoReq
     uint8_t sfpIndex;
 };
 
+struct SFPSetModeReq
+{
+    uint8_t sfpIndex;
+    uint8_t lowMode;
+};
+
 struct SFPStatusRes
 {
     uint8_t completeCode;
