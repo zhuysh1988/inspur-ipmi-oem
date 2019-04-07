@@ -1,15 +1,21 @@
-#include <host-ipmid/ipmid-api.h>
+#include <ipmid/api.h>
 #include <fcntl.h>
 #include <boost/container/flat_map.hpp>
 #include <iostream>
 #include <phosphor-logging/log.hpp>
 #include <sdbusplus/message/types.hpp>
 #include <sdbusplus/timer.hpp>
+#include <sdbusplus/bus.hpp>
 #include <psucommands.hpp>
-#include <main.hpp>
+#include <stdlib.h>
+#include "utils.hpp"
+#include <cmath>
+// #include <main.hpp>
 
 namespace inspur
 {
+
+void registerPSUFunctions() __attribute__((constructor));
 
 int getPSUNum()
 {
@@ -117,24 +123,24 @@ ipmi_ret_t ipmiGetPSUCount(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
                                         ipmi_data_len_t dataLen,
                                         ipmi_context_t context)
 {
-    if (*dataLen != 1)
-    {
-        *dataLen = 0;
-        return IPMI_CC_REQ_DATA_LEN_INVALID;
-    }
+    // if (*dataLen != 1)
+    // {
+    //     *dataLen = 0;
+    //     return IPMI_CC_REQ_DATA_LEN_INVALID;
+    // }
     *dataLen = 0; // default to 0 in case of an error
 
-    auto req = static_cast<GetPSUNumReq*>(request);
+    // auto req = static_cast<GetPSUNumReq*>(request);
     GetPSUNumRes psuNumRes{};
 
-    if (req->psuCmd != psuSubCmd)
-    {
-        return IPMI_CC_INVALID_FIELD_REQUEST;
-    }
+    // if (req->psuCmd != psuSubCmd)
+    // {
+    //     return IPMI_CC_INVALID_FIELD_REQUEST;
+    // }
 
     *dataLen = sizeof(GetPSUNumRes);
 
-    psuNumRes.completeCode = completeCode;
+    // psuNumRes.completeCode = 0x00;
     psuNumRes.psuNum = getPSUNum();
     std::memcpy(response, &psuNumRes, *dataLen);
 
@@ -147,6 +153,7 @@ ipmi_ret_t ipmiGetPSUStatus(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
                                         ipmi_data_len_t dataLen,
                                         ipmi_context_t context)
 {
+    // sleep(1);
     if (*dataLen != 1)
     {
         *dataLen = 0;
@@ -169,11 +176,11 @@ ipmi_ret_t ipmiGetPSUStatus(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
         return IPMI_CC_PARM_OUT_OF_RANGE;
     }
 
-    int dirFlag = setDirection(psuConf[psuIndex], 0);
-    if (dirFlag == -1)
-    {
-        return IPMI_CC_PARM_OUT_OF_RANGE;
-    }
+    // int dirFlag = setDirection(psuConf[psuIndex], 0);
+    // if (dirFlag == -1)
+    // {
+    //     return IPMI_CC_PARM_OUT_OF_RANGE;
+    // }
 
     int psuPresent = getGPIOValue(psuConf[psuIndex]);
     if (psuPresent == -1)
@@ -181,6 +188,30 @@ ipmi_ret_t ipmiGetPSUStatus(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
         return IPMI_CC_INVALID_FIELD_REQUEST;
     }
 
+    if (psuPresent == 0) {
+        char fpath[64];
+        snprintf(fpath, sizeof(fpath), "%s/psu%d_input_voltage", psuVoltagePath, psuIndex);
+
+        sdbusplus::bus::bus bus{ipmid_get_sd_bus_connection()};
+        auto service = ipmi::getService(bus, psuVoltageIntf, fpath);
+        auto properties = ipmi::getAllDbusProperties(bus, service, fpath,
+                                                     psuVoltageIntf);
+        auto invalue = sdbusplus::message::variant_ns::get<int64_t>(properties[valueProperty]);
+        int64_t inrst = invalue * std::pow(10, -3);
+        psuInfoRes.PSUInfo.InputVolt = static_cast<uint16_t>(inrst);
+
+        snprintf(fpath, sizeof(fpath), "%s/psu%d_output_voltage", psuVoltagePath, psuIndex);
+
+        auto outproperties = ipmi::getAllDbusProperties(bus, service, fpath,
+                                                     psuVoltageIntf);
+        auto outvalue = sdbusplus::message::variant_ns::get<int64_t>(outproperties[valueProperty]);
+        int64_t outrst = outvalue * std::pow(10, -3);
+        psuInfoRes.PSUInfo.OutputVolt = static_cast<uint16_t>(outrst);
+        // snprintf(fpath, sizeof(fpath), "%s/psu%d_output_voltage", psuVoltagePath, psuIndex);
+        // auto outvalue = ipmi::getDbusProperty(bus, service, fpath,
+        //                                 psuVoltageIntf, valueProperty);
+        // psuInfoRes.PSUInfo.OutputVolt = sdbusplus::message::variant_ns::get<std::int16_t>(outvalue);
+    }
     int unexport = gpioUnexport(psuConf[psuIndex]);
     if (unexport == -1)
     {
@@ -188,7 +219,7 @@ ipmi_ret_t ipmiGetPSUStatus(ipmi_netfn_t netfn, ipmi_cmd_t cmd,
     }
 
     *dataLen = sizeof(GetPSUStatusRes);
-    psuInfoRes.completeCode = completeCode;
+    // psuInfoRes.completeCode = 0x00;
     psuInfoRes.PSUInfo.Index = psuIndex;
     psuInfoRes.PSUInfo.Present = psuPresent == 1 ? 0 : 1;
 
@@ -201,15 +232,17 @@ void registerPSUFunctions()
 {
     // <Get PSU number>
     ipmi_register_callback(
-        netfunInspurAppOEM,
-        static_cast<ipmi_cmd_t>(IPMINetfnInspurOEMCmd::cmdGetPSUNumber),
+        0x33,
+        0x22,
         NULL, ipmiGetPSUCount, PRIVILEGE_USER);
+    std::printf("Registering NetFn:[0x%X], Cmd:[0x%X]\n", 0x33, 0x22);
 
     // <Get PSU info>
     ipmi_register_callback(
-        netfunInspurAppOEM,
-        static_cast<ipmi_cmd_t>(IPMINetfnInspurOEMCmd::cmdGetPSUStatus),
+        0x33,
+        0x33,
         NULL, ipmiGetPSUStatus, PRIVILEGE_USER);
+    std::printf("Registering NetFn:[0x%X], Cmd:[0x%X]\n", 0x33, 0x33);
     
     return;
 }
