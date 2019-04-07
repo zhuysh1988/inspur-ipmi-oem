@@ -78,8 +78,8 @@ endif ()
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_library (
-    zinspuroemcmds SHARED src/oemcommands.cpp src/sensorcommands.cpp
-    src/storagecommands.cpp src/psucommands.cpp
+    zinspuroemcmds SHARED src/psucommands.cpp src/bios.cpp src/bmcinfo.cpp 
+    src/i2c.cpp src/inspur_cmds.cpp src/sfpcommands.cpp
 )
 set_target_properties (zinspuroemcmds PROPERTIES VERSION "0.1.0")
 set_target_properties (zinspuroemcmds PROPERTIES SOVERSION "0")
